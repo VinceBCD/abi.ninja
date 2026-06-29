@@ -268,6 +268,7 @@ const Home: NextPage = () => {
     menu: (provided: any) => ({
       ...provided,
       border: `1px solid ${isDarkMode ? "#555555" : "#a3a3a3"}`,
+      zIndex: 20,
     }),
   };
 

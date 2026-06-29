@@ -54,7 +54,8 @@ export const MetaHeader = ({
         </>
       )}
       {twitterCard && <meta name="twitter:card" content={twitterCard} />}
-      <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico" />
+      <link rel="icon" type="image/svg+xml" href="/3videnz-favicon.svg" />
+      <link rel="apple-touch-icon" href="/3videnz-favicon.svg" />
       {children}
     </Head>
   );
