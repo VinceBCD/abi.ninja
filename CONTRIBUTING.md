@@ -1,12 +1,12 @@
-# Welcome to ABI Ninja Contributing Guide
+﻿# Welcome to 3videnZ Explorer Contributing Guide
 
-Thank you for investing your time in contributing to ABI Ninja!
+Thank you for investing your time in contributing to 3videnZ Explorer!
 
 This guide aims to provide an overview of the contribution workflow to help us make the contribution process effective for everyone involved.
 
 ## About the Project
 
-ABI Ninja is a tool to interact with smart contracts on any EVM chain, using the Contract address (if it's verified) or its ABI + Contract address.
+3videnZ Explorer is a tool to interact with smart contracts on any EVM chain, using the Contract address (if it's verified) or its ABI + Contract address.
 
 The current version is built with [Scaffold-ETH 2](https://github.com/scaffold-eth/scaffold-eth-2).
 
@@ -40,7 +40,7 @@ Issues should be used to report problems, request a new feature, or discuss pote
 
 #### Solve an issue
 
-Scan through our [existing issues](https://github.com/BuidlGuidl/abi.ninja/issues) to find one that interests you.
+Scan through our existing issues to find one that interests you.
 
 If a contributor is working on the issue, they will be assigned to the individual. If you find an issue to work on, you are welcome to assign it to yourself and open a PR with a fix for it.
 
@@ -80,3 +80,4 @@ Once you submit your PR:
 - As you update your PR and apply changes, mark each conversation resolved.
 
 Once the PR is approved, we'll "squash-and-merge" to keep the git commit history clean.
+

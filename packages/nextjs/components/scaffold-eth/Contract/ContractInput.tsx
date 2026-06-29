@@ -12,60 +12,22 @@ import {
 } from "~~/components/scaffold-eth";
 import { AbiParameterTuple } from "~~/utils/scaffold-eth/contract";
 
-const getPlaceholderExample = (type: string): string => {
-  if (type.includes("[")) {
-    const baseType = type.replace(/\[\d*\]$/, "");
-    const baseExample = getPlaceholderExample(baseType);
-    return `[${baseExample}, ...]`;
-  }
-
-  switch (type) {
-    case "address":
-      return "vitalik.eth or 0xd8dA...6045";
-    case "bool":
-      return "true";
-    case "string":
-      return "Hello World";
-    case "bytes":
-      return "0x00";
-    case "bytes32":
-      return "0x0000...0000";
-  }
-
-  if (type.startsWith("uint")) {
-    const bits = parseInt(type.slice(4)) || 256;
-    if (bits <= 8) return "42";
-    return "1000";
-  }
-
-  if (type.startsWith("int")) {
-    const bits = parseInt(type.slice(3)) || 256;
-    if (bits <= 8) return "-42";
-    return "-1000";
-  }
-
-  if (type.startsWith("bytes")) {
-    return "0x00...00";
-  }
-
-  return type;
-};
-
 type ContractInputProps = {
   setForm: Dispatch<SetStateAction<Record<string, any>>>;
   form: Record<string, any> | undefined;
   stateObjectKey: string;
   paramType: AbiParameter;
+  className?: string;
 };
 
 /**
  * Generic Input component to handle input's based on their function param type
  */
-export const ContractInput = ({ setForm, form, stateObjectKey, paramType }: ContractInputProps) => {
+export const ContractInput = ({ setForm, form, stateObjectKey, paramType, className }: ContractInputProps) => {
   const inputProps = {
     name: stateObjectKey,
     value: form?.[stateObjectKey],
-    placeholder: getPlaceholderExample(paramType.type),
+    placeholder: paramType.type,
     onChange: (value: any) => {
       setForm(form => ({ ...form, [stateObjectKey]: value }));
     },
@@ -110,12 +72,13 @@ export const ContractInput = ({ setForm, form, stateObjectKey, paramType }: Cont
   };
 
   return (
-    <div className="flex flex-col gap-1.5 w-full">
-      <div className="flex items-center ml-2">
-        {paramType.name && <span className="text-xs font-medium mr-2 leading-none">{paramType.name}</span>}
-        <span className="block text-xs font-extralight leading-none">{paramType.type}</span>
-      </div>
-      {renderInput()}
+    <div className={className ?? "flex flex-col gap-1.5 w-full"}>
+      {paramType.name && (
+        <div className="flex items-center ml-2 shrink-0">
+          <span className="text-xs font-medium leading-none">{paramType.name}</span>
+        </div>
+      )}
+      <div className="flex-1 min-w-0">{renderInput()}</div>
     </div>
   );
 };

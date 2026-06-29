@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { Bars3Icon } from "@heroicons/react/24/outline";
 import { RainbowKitCustomConnectButton } from "~~/components/scaffold-eth";
@@ -12,9 +12,9 @@ export const MiniHeader = () => {
         </label>
         <Link href="/" passHref className="flex items-center gap-2 sm:ml-4 mr-6 shrink-0">
           <div className="flex items-center">
-            <Image alt="Abi Ninja logo" src="/logo_inv.svg" width={50} height={50} />
+            <Image alt="3videnZ EVM Blockchains Explorer logo" src="/Ǝvidenz.png" width={28} height={28} />
             <span className="hidden sm:flex ml-2">
-              <strong>ABI</strong> <span>Ninja</span>
+              <strong>3videnZ</strong> <span>Explorer</span>
             </span>
           </div>
         </Link>

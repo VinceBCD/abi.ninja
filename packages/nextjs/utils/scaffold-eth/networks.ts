@@ -52,6 +52,7 @@ const ZKSYNC_ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_ZKSYNC_ETHERSCAN_API_KE
 const BASE_ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_BASE_ETHERSCAN_API_KEY || "";
 const SCROLL_ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_SCROLL_ETHERSCAN_API_KEY || "";
 const BSC_ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_BSC_ETHERSCAN_API_KEY || "";
+const AVALANCHE_ETHERSCAN_API_KEY = process.env.NEXT_PUBLIC_AVALANCHE_ETHERSCAN_API_KEY || "";
 
 export const NETWORKS_EXTRA_DATA: Record<string, ChainAttributes> = {
   [chains.hardhat.id]: {
@@ -137,6 +138,24 @@ export const NETWORKS_EXTRA_DATA: Record<string, ChainAttributes> = {
     etherscanEndpoint: "https://api.bscscan.com",
     etherscanApiKey: BSC_ETHERSCAN_API_KEY,
     icon: "/bsc.svg",
+  },
+  [chains.bscTestnet.id]: {
+    color: "#f0b90b",
+    etherscanEndpoint: "https://api-testnet.bscscan.com",
+    etherscanApiKey: BSC_ETHERSCAN_API_KEY,
+    icon: "/bsc.svg",
+  },
+  [chains.avalanche.id]: {
+    color: "#e84142",
+    etherscanEndpoint: "https://api.snowtrace.io",
+    etherscanApiKey: AVALANCHE_ETHERSCAN_API_KEY,
+    icon: "/avalanche.svg",
+  },
+  [chains.avalancheFuji.id]: {
+    color: "#e84142",
+    etherscanEndpoint: "https://api-testnet.snowtrace.io",
+    etherscanApiKey: AVALANCHE_ETHERSCAN_API_KEY,
+    icon: "/avalanche.svg",
   },
 };
 

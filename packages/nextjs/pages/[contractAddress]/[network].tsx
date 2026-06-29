@@ -11,6 +11,7 @@ import { MiniHeader } from "~~/components/MiniHeader";
 import { formDataToChain, storeChainInLocalStorage } from "~~/components/NetworksDropdown/utils";
 import { SwitchTheme } from "~~/components/SwitchTheme";
 import { ContractUI } from "~~/components/scaffold-eth";
+import { PRESET_ABI_BY_ADDRESS } from "~~/contracts/evidenzAbis";
 import useFetchContractAbi from "~~/hooks/useFetchContractAbi";
 import { useHeimdall } from "~~/hooks/useHeimdall";
 import { useGlobalState } from "~~/services/store/store";
@@ -55,16 +56,16 @@ const ContractDetailPage = ({ addressFromUrl, chainIdFromUrl }: ServerSideProps)
   const [localContractData, setLocalContractData] = useState<ContractData | null>(null);
   const [decompiledAbi, setDecompiledAbi] = useState<Abi | null>(null);
 
-  const { chainId, setImplementationAddress, contractAbi, chains, addChain, setTargetNetwork } = useGlobalState(
-    state => ({
+  const { chainId, setImplementationAddress, contractAbi, setContractAbi, chains, addChain, setTargetNetwork } =
+    useGlobalState(state => ({
       chains: state.chains,
       addChain: state.addChain,
       chainId: state.targetNetwork.id,
       setTargetNetwork: state.setTargetNetwork,
       setImplementationAddress: state.setImplementationAddress,
       contractAbi: state.contractAbi,
-    }),
-  );
+      setContractAbi: state.setContractAbi,
+    }));
 
   const publicClient = usePublicClient({
     chainId: parseInt(network),
@@ -101,6 +102,16 @@ const ContractDetailPage = ({ addressFromUrl, chainIdFromUrl }: ServerSideProps)
       : null;
 
   const error = isUseLocalAbi ? null : fetchError;
+
+  useEffect(() => {
+    if (contractAddress && network && contractAbi.length === 0) {
+      const key = `${contractAddress.toLowerCase()}:${parseInt(network)}`;
+      const presetAbi = PRESET_ABI_BY_ADDRESS[key];
+      if (presetAbi) {
+        setContractAbi(presetAbi);
+      }
+    }
+  }, [contractAddress, network, contractAbi.length, setContractAbi]);
 
   useEffect(() => {
     if (network) {

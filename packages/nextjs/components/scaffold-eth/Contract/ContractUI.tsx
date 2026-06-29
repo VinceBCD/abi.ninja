@@ -5,11 +5,17 @@ import { ContractVariables } from "./ContractVariables";
 import { ContractWriteMethods } from "./ContractWriteMethods";
 import { AbiFunction } from "abitype";
 import { Abi, Address as AddressType } from "viem";
-import { useContractRead } from "wagmi";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { MiniFooter } from "~~/components/MiniFooter";
-import { Address, Balance, MethodSelector } from "~~/components/scaffold-eth";
-import { useNetworkColor } from "~~/hooks/scaffold-eth";
+import {
+  Address,
+  Balance,
+  MethodSelector,
+  getFunctionInputKey,
+  transformAbiFunction,
+} from "~~/components/scaffold-eth";
+import { PRESET_LABEL_BY_ADDRESS } from "~~/contracts/evidenzAbis";
+import { useAccountBalance } from "~~/hooks/scaffold-eth";
 import useFetchContractCreationInfo from "~~/hooks/useFetchContractCreationInfo";
 import { useGlobalState } from "~~/services/store/store";
 import { getBlockExplorerTxLink, getTargetNetworks } from "~~/utils/scaffold-eth";
@@ -68,7 +74,7 @@ export const ContractUI = ({ className = "", initialContractData }: ContractUIPr
     implementationAddress: state.implementationAddress,
   }));
   const mainNetwork = mainNetworks.find(network => network.id === chainId);
-  const networkColor = useNetworkColor(mainNetwork);
+  const { balance: contractBalance, isLoading: isBalanceLoading } = useAccountBalance(initialContractData.address);
   const router = useRouter();
   const { network } = router.query as { network?: string };
 
@@ -104,6 +110,7 @@ export const ContractUI = ({ className = "", initialContractData }: ContractUIPr
 
   // local abi state for for dispalying selected methods
   const [abi, setAbi] = useState<AugmentedAbiFunction[]>([]);
+  const [initialParamsByMethod, setInitialParamsByMethod] = useState<Record<string, Record<string, string>>>({});
 
   const handleMethodSelect = (uid: string) => {
     const methodToAdd = readMethodsWithInputsAndWriteMethods.find(method => method.uid === uid);
@@ -128,23 +135,43 @@ export const ContractUI = ({ className = "", initialContractData }: ContractUIPr
       selectedMethodNames.includes(method.uid),
     );
     setAbi(selectedMethods as AugmentedAbiFunction[]);
+
+    const paramsByMethod: Record<string, Record<string, string>> = {};
+    selectedMethods.forEach(method => {
+      const transformed = transformAbiFunction(method);
+      transformed.inputs.forEach((input, index) => {
+        const urlValue = router.query[`${method.uid}.${index}`] as string | undefined;
+        if (urlValue !== undefined) {
+          const formKey = getFunctionInputKey(method.name, input, index);
+          if (!paramsByMethod[method.uid]) paramsByMethod[method.uid] = {};
+          paramsByMethod[method.uid][formKey] = urlValue;
+        }
+      });
+    });
+    setInitialParamsByMethod(paramsByMethod);
+  }, [router.query, readMethodsWithInputsAndWriteMethods]);
+
+  const presetLabel = PRESET_LABEL_BY_ADDRESS[`${initialContractData.address.toLowerCase()}:${chainId}`];
+
+  const { readTabLabel, singleReadMethodUid } = useMemo(() => {
+    const selectedUids = router.query.methods ? (router.query.methods as string).split(",") : null;
+    const allReadMethods = readMethodsWithInputsAndWriteMethods.filter(
+      m => m.stateMutability === "view" || m.stateMutability === "pure",
+    );
+    const displayed = selectedUids ? allReadMethods.filter(m => selectedUids.includes(m.uid)) : allReadMethods;
+    if (displayed.length === 1) return { readTabLabel: displayed[0].name, singleReadMethodUid: displayed[0].uid };
+    return { readTabLabel: "Query", singleReadMethodUid: null };
   }, [router.query.methods, readMethodsWithInputsAndWriteMethods]);
 
-  const { data: contractNameData, isLoading: isContractNameLoading } = useContractRead({
-    address: initialContractData.address,
-    abi: initialContractData.abi,
-    chainId: chainId,
-    functionName: "name",
-  });
-
-  const displayContractName = useMemo(() => {
-    if (isContractNameLoading) return "Loading...";
-    if (contractNameData && typeof contractNameData === "string") {
-      return contractNameData;
-    }
-    // Default to "Contract" for errors or any other cases
-    return "Contract";
-  }, [isContractNameLoading, contractNameData]);
+  const { executeTabLabel, singleExecuteMethodUid } = useMemo(() => {
+    const selectedUids = router.query.methods ? (router.query.methods as string).split(",") : null;
+    const allWriteMethods = readMethodsWithInputsAndWriteMethods.filter(
+      m => m.stateMutability !== "view" && m.stateMutability !== "pure",
+    );
+    const displayed = selectedUids ? allWriteMethods.filter(m => selectedUids.includes(m.uid)) : allWriteMethods;
+    if (displayed.length === 1) return { executeTabLabel: displayed[0].name, singleExecuteMethodUid: displayed[0].uid };
+    return { executeTabLabel: "Execute", singleExecuteMethodUid: null };
+  }, [router.query.methods, readMethodsWithInputsAndWriteMethods]);
 
   return (
     <div className="drawer sm:drawer-open h-full">
@@ -163,99 +190,113 @@ export const ContractUI = ({ className = "", initialContractData }: ContractUIPr
       </div>
       <div className="drawer-content flex flex-col items-center justify-center overflow-auto">
         <div className={`grid grid-cols-1 lg:grid-cols-6 w-full my-0 ${className} h-full flex-grow`}>
-          <div className="col-span-6 grid grid-cols-1 gap-6 laptop:grid-cols-[repeat(13,_minmax(0,_1fr))] px-6 py-10">
-            <div className="laptop:col-span-8 flex flex-col gap-6">
-              <div className="z-10">
-                <div className="bg-base-200 rounded-2xl shadow-xl flex flex-col mt-10 relative">
-                  <div className="h-[5rem] w-[5.5rem] bg-secondary absolute self-start rounded-[22px] -top-[38px] -left-[0px] -z-10 py-[0.65rem] shadow-lg shadow-base-300">
-                    <div className="flex items-center justify-center space-x-2">
-                      <p className="my-0 text-sm font-bold">Read</p>
-                    </div>
-                  </div>
-                  <div className="divide-y divide-base-300 px-5">
-                    <ContractReadMethods
-                      deployedContractData={{ address: initialContractData.address, abi }}
-                      removeMethod={removeMethod}
-                    />
-                  </div>
-                </div>
+          <div className="col-span-6 flex flex-col gap-4 px-6 pb-10 pt-2">
+            {/* Contract Overview — full width */}
+            <div className="bg-base-200 shadow-xl rounded-2xl px-6 py-4 flex flex-wrap items-center gap-x-6 gap-y-1">
+              <span className="font-bold">Contract Overview</span>
+              {presetLabel && <span className="text-sm font-semibold text-primary">{presetLabel}</span>}
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-base">Address</span>
+                <span className="text-primary">
+                  <Address address={initialContractData.address} />
+                </span>
               </div>
-              <div className="z-10">
-                <div className="bg-base-200 rounded-2xl shadow-xl flex flex-col mt-10 relative">
-                  <div className="h-[5rem] w-[5.5rem] bg-secondary absolute self-start rounded-[22px] -top-[38px] -left-[0px] -z-10 py-[0.65rem] shadow-lg shadow-base-300">
-                    <div className="flex items-center justify-center space-x-2">
-                      <p className="my-0 text-sm font-bold">Write</p>
-                    </div>
-                  </div>
-                  <div className="divide-y divide-base-300 px-5">
-                    <ContractWriteMethods
-                      deployedContractData={{ address: initialContractData.address, abi }}
-                      onChange={triggerRefreshDisplayVariables}
-                      removeMethod={removeMethod}
-                    />
-                  </div>
+              {implementationAddress && (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium text-base text-green-600">Implementation</span>
+                  <Address address={implementationAddress} />
                 </div>
-              </div>
+              )}
+              {!isBalanceLoading && contractBalance !== null && contractBalance !== 0 && (
+                <div className="flex items-center gap-1">
+                  <span className="text-sm font-bold">Balance:</span>
+                  <Balance address={initialContractData.address} className="h-1.5 min-h-[0.375rem] px-0" />
+                </div>
+              )}
+              {mainNetwork && (
+                <span className="flex items-center gap-2">
+                  <span className="font-medium text-base">Blockchain</span>
+                  <span className="text-primary">{mainNetwork.id == 31337 ? "Localhost" : mainNetwork.name}</span>
+                </span>
+              )}
+              {!isContractCreationLoading && contractCreationInfo && (
+                <div className="text-sm flex items-center gap-2">
+                  <span className="font-bold">Created at:</span>
+                  <span>Block {contractCreationInfo.blockNumber}</span>
+                  <a
+                    href={getBlockExplorerTxLink(chainId, contractCreationInfo.txHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="link no-underline"
+                  >
+                    <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                  </a>
+                </div>
+              )}
             </div>
 
-            <div className="laptop:col-span-5 flex flex-col mt-10">
-              <div className="bg-base-200 shadow-xl rounded-2xl px-6 mb-6 space-y-1 py-4">
-                <div className="flex">
-                  <div className="flex flex-col gap-1">
-                    <span className="font-bold pb-2">Contract Overview</span>
-                    <div className="flex pb-1">
-                      <span className="font-medium text-base mr-4"> {displayContractName} </span>
-                      <Address address={initialContractData.address} />
-                    </div>
-                    {implementationAddress && (
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium text-base mr-4 text-green-600">Implementation Address</span>
-                        <Address address={implementationAddress} />
+            {/* Methods + Contract Data */}
+            <div className="grid grid-cols-1 gap-6 laptop:grid-cols-[repeat(13,_minmax(0,_1fr))]">
+              <div className="laptop:col-span-9 flex flex-col gap-6">
+                <div className="z-10">
+                  <div className="bg-base-200 rounded-2xl shadow-xl flex flex-col mt-10 relative">
+                    <div className="h-[5rem] min-w-[5.5rem] bg-secondary absolute self-start rounded-[22px] -top-[38px] -left-[0px] -z-10 py-[0.65rem] px-3 shadow-lg shadow-base-300">
+                      <div className="flex items-center gap-2">
+                        <p className="my-0 text-sm font-bold whitespace-nowrap">{readTabLabel}</p>
+                        {singleReadMethodUid && (
+                          <button
+                            onClick={() => removeMethod(singleReadMethodUid)}
+                            className="btn btn-ghost btn-xs p-0 h-auto min-h-0 opacity-70 hover:opacity-100"
+                          >
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
-                    )}
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold">Balance:</span>
-                      <Balance address={initialContractData.address} className="h-1.5 min-h-[0.375rem] px-0" />
+                    </div>
+                    <div className="divide-y divide-base-300 px-5">
+                      <ContractReadMethods
+                        deployedContractData={{ address: initialContractData.address, abi }}
+                        removeMethod={removeMethod}
+                        initialParamsByMethod={initialParamsByMethod}
+                      />
                     </div>
                   </div>
                 </div>
-                {mainNetwork && (
-                  <p className="my-0 text-sm">
-                    <span className="font-bold">Network</span>:{" "}
-                    <span style={{ color: networkColor }}>
-                      {mainNetwork.id == 31337 ? "Localhost" : mainNetwork.name}
-                    </span>
-                  </p>
-                )}
-                {!isContractCreationLoading && contractCreationInfo && (
-                  <div className="my-0 text-sm flex items-center gap-2">
-                    <span className="font-bold">Created at:</span>
-                    {isContractCreationLoading ? (
-                      <span className="loading loading-spinner loading-xs"></span>
-                    ) : (
-                      contractCreationInfo && (
-                        <>
-                          <span>Block {contractCreationInfo.blockNumber}</span>
-                          <a
-                            href={getBlockExplorerTxLink(chainId, contractCreationInfo.txHash)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="link no-underline"
+                <div className="z-10">
+                  <div className="bg-base-200 rounded-2xl shadow-xl flex flex-col mt-10 relative">
+                    <div className="h-[5rem] min-w-[5.5rem] bg-secondary absolute self-start rounded-[22px] -top-[38px] -left-[0px] -z-10 py-[0.65rem] px-3 shadow-lg shadow-base-300">
+                      <div className="flex items-center gap-2">
+                        <p className="my-0 text-sm font-bold whitespace-nowrap">{executeTabLabel}</p>
+                        {singleExecuteMethodUid && (
+                          <button
+                            onClick={() => removeMethod(singleExecuteMethodUid)}
+                            className="btn btn-ghost btn-xs p-0 h-auto min-h-0 opacity-70 hover:opacity-100"
                           >
-                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                          </a>
-                        </>
-                      )
-                    )}
+                            <XMarkIcon className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="divide-y divide-base-300 px-5">
+                      <ContractWriteMethods
+                        deployedContractData={{ address: initialContractData.address, abi }}
+                        onChange={triggerRefreshDisplayVariables}
+                        removeMethod={removeMethod}
+                        initialParamsByMethod={initialParamsByMethod}
+                      />
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
-              <div className="bg-base-200 shadow-xl rounded-2xl px-6 py-4">
-                <span className="block font-bold pb-3">Contract Data</span>
-                <ContractVariables
-                  refreshDisplayVariables={refreshDisplayVariables}
-                  deployedContractData={initialContractData}
-                />
+
+              <div className="laptop:col-span-4 flex flex-col mt-10">
+                <div className="bg-base-200 shadow-xl rounded-2xl px-6 py-4">
+                  <span className="block font-bold pb-3">Contract Data</span>
+                  <ContractVariables
+                    refreshDisplayVariables={refreshDisplayVariables}
+                    deployedContractData={initialContractData}
+                  />
+                </div>
               </div>
             </div>
           </div>

@@ -18,11 +18,29 @@ import { mainnet } from "viem/chains";
 import { AddCustomChainModal, CustomOption, OtherChainsModal } from "~~/components/NetworksDropdown";
 import { useGlobalState } from "~~/services/store/store";
 
-export const NetworksDropdown = ({ onChange }: { onChange: (options: any) => any }) => {
+const findOptionByChainId = (chainId: number): Options | undefined => {
+  for (const group of Object.values(initialGroupedOptions)) {
+    const found = group.options.find(opt => typeof opt.value === "number" && opt.value === chainId);
+    if (found) return found;
+  }
+  return undefined;
+};
+
+export const NetworksDropdown = ({
+  onChange,
+  defaultChainId,
+}: {
+  onChange: (options: any) => any;
+  defaultChainId?: number;
+}) => {
   const [isMobile, setIsMobile] = useState(false);
   const { resolvedTheme } = useTheme();
   const [groupedOptionsState, setGroupedOptionsState] = useState(initialGroupedOptions);
-  const [selectedOption, setSelectedOption] = useState<SingleValue<Options>>(initialGroupedOptions.mainnet.options[0]);
+  const initialOption =
+    defaultChainId !== undefined
+      ? findOptionByChainId(defaultChainId) ?? initialGroupedOptions.mainnet.options[0]
+      : initialGroupedOptions.mainnet.options[0];
+  const [selectedOption, setSelectedOption] = useState<SingleValue<Options>>(initialOption);
 
   const { addCustomChain, removeChain, resetTargetNetwork, setTargetNetwork, chains } = useGlobalState(state => ({
     addCustomChain: state.addChain,
@@ -34,6 +52,14 @@ export const NetworksDropdown = ({ onChange }: { onChange: (options: any) => any
 
   const seeOtherChainsModalRef = useRef<HTMLDialogElement>(null);
   const customChainModalRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (defaultChainId !== undefined) {
+      const chain = Object.values(chains).find(c => c.id === defaultChainId);
+      if (chain) setTargetNetwork(chain as Chain);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isDarkMode = resolvedTheme === "dark";
 
@@ -160,14 +186,17 @@ export const NetworksDropdown = ({ onChange }: { onChange: (options: any) => any
           ...theme,
           colors: {
             ...theme.colors,
-            primary25: isDarkMode ? "#401574" : "#efeaff",
-            primary50: isDarkMode ? "#551d98" : "#c1aeff",
-            primary: isDarkMode ? "#BA8DE8" : "#551d98",
-            neutral0: isDarkMode ? "#130C25" : theme.colors.neutral0,
+            primary25: isDarkMode ? "#0A3D38" : "#E6FDFA",
+            primary50: isDarkMode ? "#0D5048" : "#9AF5EC",
+            primary: isDarkMode ? "#00E5CC" : "#00A896",
+            neutral0: isDarkMode ? "#0D1918" : theme.colors.neutral0,
             neutral80: isDarkMode ? "#ffffff" : theme.colors.neutral80,
           },
         })}
+        menuPortalTarget={typeof document !== "undefined" ? document.body : undefined}
+        menuPosition="fixed"
         styles={{
+          menuPortal: provided => ({ ...provided, zIndex: 9999 }),
           menuList: provided => ({ ...provided, maxHeight: 280, overflow: "auto" }),
           control: provided => ({ ...provided, borderRadius: 12 }),
           indicatorSeparator: provided => ({ ...provided, display: "none" }),

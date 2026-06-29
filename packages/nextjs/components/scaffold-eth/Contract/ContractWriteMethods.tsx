@@ -8,10 +8,12 @@ export const ContractWriteMethods = ({
   onChange,
   deployedContractData,
   removeMethod,
+  initialParamsByMethod = {},
 }: {
   onChange: () => void;
   deployedContractData: Contract<ContractName>;
   removeMethod: (methodName: string) => void;
+  initialParamsByMethod?: Record<string, Record<string, string>>;
 }) => {
   if (!deployedContractData) {
     return null;
@@ -36,7 +38,7 @@ export const ContractWriteMethods = ({
     return (
       <div className="py-5">
         <span className="font-light text-gray-500">
-          Please select write methods from the <span className="sm:hidden">hamburger menu</span>
+          Please select execute methods from the <span className="sm:hidden">hamburger menu</span>
           <span className="hidden sm:inline">sidebar</span>.
         </span>
       </div>
@@ -53,14 +55,17 @@ export const ContractWriteMethods = ({
             onChange={onChange}
             contractAddress={deployedContractData.address}
             inheritedFrom={inheritedFrom}
+            initialFormValues={initialParamsByMethod[fn.uid]}
           />
-          <button
-            onClick={() => removeMethod(fn.uid)}
-            className="absolute top-0 right-0 btn btn-ghost btn-xs mt-[21px]"
-            aria-label="Remove method"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
+          {functionsToDisplay.length > 1 && (
+            <button
+              onClick={() => removeMethod(fn.uid)}
+              className="absolute top-0 right-0 btn btn-ghost btn-xs mt-[21px]"
+              aria-label="Remove method"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          )}
         </div>
       ))}
     </>

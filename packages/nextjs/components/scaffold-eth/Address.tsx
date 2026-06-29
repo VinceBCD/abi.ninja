@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Address as AddressType, isAddress } from "viem";
 import { hardhat } from "viem/chains";
-import { normalize } from "viem/ens";
-import { useEnsAvatar, useEnsName } from "wagmi";
+import { useEnsName } from "wagmi";
 import { CheckCircleIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
-import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { useGlobalState } from "~~/services/store/store";
 import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
 
@@ -16,22 +14,11 @@ type AddressProps = {
   size?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl";
 };
 
-const blockieSizeMap = {
-  xs: 6,
-  sm: 7,
-  base: 8,
-  lg: 9,
-  xl: 10,
-  "2xl": 12,
-  "3xl": 15,
-};
-
 /**
  * Displays an address (or ENS) with a Blockie image and option to copy address.
  */
 export const Address = ({ address, disableAddressLink, format, size = "base" }: AddressProps) => {
   const [ens, setEns] = useState<string | null>();
-  const [ensAvatar, setEnsAvatar] = useState<string | null>();
   const [addressCopied, setAddressCopied] = useState(false);
 
   const targetNetwork = useGlobalState(state => state.targetNetwork);
@@ -43,23 +30,10 @@ export const Address = ({ address, disableAddressLink, format, size = "base" }: 
       enabled: isAddress(address ?? ""),
     },
   });
-  const { data: fetchedEnsAvatar } = useEnsAvatar({
-    name: fetchedEns ? normalize(fetchedEns) : undefined,
-    chainId: 1,
-    query: {
-      enabled: Boolean(fetchedEns),
-      gcTime: 30_000,
-    },
-  });
-
   // We need to apply this pattern to avoid Hydration errors.
   useEffect(() => {
     setEns(fetchedEns);
   }, [fetchedEns]);
-
-  useEffect(() => {
-    setEnsAvatar(fetchedEnsAvatar);
-  }, [fetchedEnsAvatar]);
 
   // Skeleton UI
   if (!address) {
@@ -78,7 +52,7 @@ export const Address = ({ address, disableAddressLink, format, size = "base" }: 
   }
 
   const blockExplorerAddressLink = getBlockExplorerAddressLink(targetNetwork, address);
-  let displayAddress = address?.slice(0, 5) + "..." + address?.slice(-4);
+  let displayAddress = address?.slice(0, 8) + "..." + address?.slice(-7);
 
   if (ens) {
     displayAddress = ens;
@@ -88,13 +62,6 @@ export const Address = ({ address, disableAddressLink, format, size = "base" }: 
 
   return (
     <div className="flex items-center flex-shrink-0">
-      <div className="flex-shrink-0">
-        <BlockieAvatar
-          address={address}
-          ensImage={ensAvatar}
-          size={(blockieSizeMap[size] * 24) / blockieSizeMap["base"]}
-        />
-      </div>
       {disableAddressLink || targetNetwork.id === hardhat.id || !Boolean(blockExplorerAddressLink) ? (
         <span className={`ml-1.5 text-${size} font-normal`}>{displayAddress}</span>
       ) : (

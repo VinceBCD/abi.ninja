@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import Head from "next/head";
 import { Address } from "viem";
 
@@ -14,12 +14,14 @@ type MetaHeaderProps = {
 
 // Images must have an absolute path to work properly on Twitter.
 // We try to get it dynamically from Vercel, but we default to relative path.
-const baseUrl = process.env.VERCEL_URL ? "https://abi.ninja" : `http://localhost:${process.env.PORT || 3000}`;
+const baseUrl = process.env.VERCEL_URL
+  ? "https://explorer.3videnz.com"
+  : `http://localhost:${process.env.PORT || 3000}`;
 
 export const MetaHeader = ({
   address,
   network,
-  title = "ABI Ninja",
+  title = "3videnZ EVM Blockchains Explorer",
   description = "Interact with smart contracts on any EVM chain",
   image = "thumbnail.png",
   twitterCard = "summary_large_image",

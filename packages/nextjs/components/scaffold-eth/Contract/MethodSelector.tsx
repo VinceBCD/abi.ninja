@@ -56,7 +56,7 @@ export const MethodSelector = ({
               <ChevronDownIcon className="h-4 w-4 mr-2" />
             )}
           </span>{" "}
-          Read
+          Query
         </h3>
         {!isReadCollapsed && (
           <div className="flex flex-col items-start gap-1 pb-4">
@@ -104,7 +104,7 @@ export const MethodSelector = ({
               <ChevronDownIcon className="h-4 w-4 mr-2" />
             )}
           </span>{" "}
-          Write
+          Execute
         </h3>
         {!isWriteCollapsed && (
           <div className="flex flex-col items-start gap-1">

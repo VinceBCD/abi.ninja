@@ -25,6 +25,7 @@ type WriteOnlyFunctionFormProps = {
   onChange: () => void;
   contractAddress: Address;
   inheritedFrom?: string;
+  initialFormValues?: Record<string, string>;
 };
 
 export const WriteOnlyFunctionForm = ({
@@ -33,9 +34,13 @@ export const WriteOnlyFunctionForm = ({
   onChange,
   contractAddress,
   inheritedFrom,
+  initialFormValues,
 }: WriteOnlyFunctionFormProps) => {
   const mainChainId = useGlobalState(state => state.targetNetwork.id);
-  const [form, setForm] = useState<Record<string, any>>(() => getInitialFormState(abiFunction));
+  const [form, setForm] = useState<Record<string, any>>(() => ({
+    ...getInitialFormState(abiFunction),
+    ...(initialFormValues || {}),
+  }));
   const [txValue, setTxValue] = useState<string>("");
   const { chain } = useAccount();
   const writeTxn = useTransactor();
@@ -169,7 +174,7 @@ export const WriteOnlyFunctionForm = ({
               >
                 <button className="btn btn-secondary btn-sm" disabled={wrongNetwork || isPending} onClick={handleWrite}>
                   {isPending && <span className="loading loading-spinner loading-xs"></span>}
-                  Send 💸
+                  Execute
                 </button>
               </div>
             ) : (
