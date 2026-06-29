@@ -35,8 +35,9 @@ jobs:
 
       - name: Copy static assets into standalone folder
         run: |
-          cp -r packages/nextjs/public packages/nextjs/.next/standalone/public
-          cp -r packages/nextjs/.next/static packages/nextjs/.next/standalone/.next/static
+          cp -r packages/nextjs/public packages/nextjs/.next/standalone/packages/nextjs/public
+          mkdir -p packages/nextjs/.next/standalone/packages/nextjs/.next
+          cp -r packages/nextjs/.next/static packages/nextjs/.next/standalone/packages/nextjs/.next/static
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3

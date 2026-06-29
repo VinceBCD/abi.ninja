@@ -81,6 +81,7 @@ export const ReadOnlyFunctionForm = ({
     if (!abiFunction.outputs.every(o => o.name)) return result;
     const named: Record<string, unknown> = {};
     abiFunction.outputs.forEach((output, i) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       named[output.name!] = (result as unknown[])[i];
     });
     return named;
