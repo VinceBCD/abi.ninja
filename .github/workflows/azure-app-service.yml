@@ -1,0 +1,46 @@
+name: Deploy to Azure App Service
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build Next.js app
+        working-directory: packages/nextjs
+        run: yarn build
+        env:
+          NEXT_PUBLIC_IGNORE_BUILD_ERROR: "true"
+          NEXT_PUBLIC_ALCHEMY_API_KEY: ${{ secrets.NEXT_PUBLIC_ALCHEMY_API_KEY }}
+          NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID }}
+          NEXT_PUBLIC_ETHERSCAN_V2_API_KEY: ${{ secrets.NEXT_PUBLIC_ETHERSCAN_V2_API_KEY }}
+          NEXT_PUBLIC_MAINNET_ETHERSCAN_API_KEY: ${{ secrets.NEXT_PUBLIC_MAINNET_ETHERSCAN_API_KEY }}
+          NEXT_PUBLIC_OPTIMISM_ETHERSCAN_API_KEY: ${{ secrets.NEXT_PUBLIC_OPTIMISM_ETHERSCAN_API_KEY }}
+          NEXT_PUBLIC_BASE_ETHERSCAN_API_KEY: ${{ secrets.NEXT_PUBLIC_BASE_ETHERSCAN_API_KEY }}
+          NEXT_PUBLIC_POLYGON_ETHERSCAN_API_KEY: ${{ secrets.NEXT_PUBLIC_POLYGON_ETHERSCAN_API_KEY }}
+          NEXT_PUBLIC_ARBITRUM_ETHERSCAN_API_KEY: ${{ secrets.NEXT_PUBLIC_ARBITRUM_ETHERSCAN_API_KEY }}
+
+      - name: Copy static assets into standalone folder
+        run: |
+          cp -r packages/nextjs/public packages/nextjs/.next/standalone/public
+          cp -r packages/nextjs/.next/static packages/nextjs/.next/standalone/.next/static
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_APP_SERVICE_NAME }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          package: packages/nextjs/.next/standalone
