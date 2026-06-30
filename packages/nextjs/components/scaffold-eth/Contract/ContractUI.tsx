@@ -173,6 +173,16 @@ export const ContractUI = ({ className = "", initialContractData }: ContractUIPr
     return { executeTabLabel: "Execute", singleExecuteMethodUid: null };
   }, [router.query.methods, readMethodsWithInputsAndWriteMethods]);
 
+  const { showQuery, showExecute } = useMemo(() => {
+    if (!router.query.methods) return { showQuery: true, showExecute: false };
+    const selectedUids = (router.query.methods as string).split(",");
+    const selectedMethods = readMethodsWithInputsAndWriteMethods.filter(m => selectedUids.includes(m.uid));
+    if (selectedMethods.length === 0) return { showQuery: true, showExecute: false };
+    const hasRead = selectedMethods.some(m => m.stateMutability === "view" || m.stateMutability === "pure");
+    const hasWrite = selectedMethods.some(m => m.stateMutability !== "view" && m.stateMutability !== "pure");
+    return { showQuery: hasRead, showExecute: hasWrite };
+  }, [router.query.methods, readMethodsWithInputsAndWriteMethods]);
+
   return (
     <div className="drawer sm:drawer-open h-full">
       <input id="sidebar" type="checkbox" className="drawer-toggle" />
@@ -238,55 +248,59 @@ export const ContractUI = ({ className = "", initialContractData }: ContractUIPr
             {/* Methods + Contract Data */}
             <div className="grid grid-cols-1 gap-6 laptop:grid-cols-[repeat(13,_minmax(0,_1fr))]">
               <div className="laptop:col-span-9 flex flex-col gap-6">
-                <div className="z-10">
-                  <div className="bg-base-200 rounded-2xl shadow-xl flex flex-col mt-10 relative">
-                    <div className="h-[5rem] min-w-[5.5rem] bg-secondary absolute self-start rounded-[22px] -top-[38px] -left-[0px] -z-10 py-[0.65rem] px-3 shadow-lg shadow-base-300">
-                      <div className="flex items-center gap-2">
-                        <p className="my-0 text-sm font-bold whitespace-nowrap">{readTabLabel}</p>
-                        {singleReadMethodUid && (
-                          <button
-                            onClick={() => removeMethod(singleReadMethodUid)}
-                            className="btn btn-ghost btn-xs p-0 h-auto min-h-0 opacity-70 hover:opacity-100"
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                          </button>
-                        )}
+                {showQuery && (
+                  <div className="z-10">
+                    <div className="bg-base-200 rounded-2xl shadow-xl flex flex-col mt-10 relative">
+                      <div className="h-[5rem] min-w-[5.5rem] bg-secondary absolute self-start rounded-[22px] -top-[38px] -left-[0px] -z-10 py-[0.65rem] px-3 shadow-lg shadow-base-300">
+                        <div className="flex items-center gap-2">
+                          <p className="my-0 text-sm font-bold whitespace-nowrap">{readTabLabel}</p>
+                          {singleReadMethodUid && (
+                            <button
+                              onClick={() => removeMethod(singleReadMethodUid)}
+                              className="btn btn-ghost btn-xs p-0 h-auto min-h-0 opacity-70 hover:opacity-100"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="divide-y divide-base-300 px-5">
+                        <ContractReadMethods
+                          deployedContractData={{ address: initialContractData.address, abi }}
+                          removeMethod={removeMethod}
+                          initialParamsByMethod={initialParamsByMethod}
+                        />
                       </div>
                     </div>
-                    <div className="divide-y divide-base-300 px-5">
-                      <ContractReadMethods
-                        deployedContractData={{ address: initialContractData.address, abi }}
-                        removeMethod={removeMethod}
-                        initialParamsByMethod={initialParamsByMethod}
-                      />
-                    </div>
                   </div>
-                </div>
-                <div className="z-10">
-                  <div className="bg-base-200 rounded-2xl shadow-xl flex flex-col mt-10 relative">
-                    <div className="h-[5rem] min-w-[5.5rem] bg-secondary absolute self-start rounded-[22px] -top-[38px] -left-[0px] -z-10 py-[0.65rem] px-3 shadow-lg shadow-base-300">
-                      <div className="flex items-center gap-2">
-                        <p className="my-0 text-sm font-bold whitespace-nowrap">{executeTabLabel}</p>
-                        {singleExecuteMethodUid && (
-                          <button
-                            onClick={() => removeMethod(singleExecuteMethodUid)}
-                            className="btn btn-ghost btn-xs p-0 h-auto min-h-0 opacity-70 hover:opacity-100"
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                          </button>
-                        )}
+                )}
+                {showExecute && (
+                  <div className="z-10">
+                    <div className="bg-base-200 rounded-2xl shadow-xl flex flex-col mt-10 relative">
+                      <div className="h-[5rem] min-w-[5.5rem] bg-secondary absolute self-start rounded-[22px] -top-[38px] -left-[0px] -z-10 py-[0.65rem] px-3 shadow-lg shadow-base-300">
+                        <div className="flex items-center gap-2">
+                          <p className="my-0 text-sm font-bold whitespace-nowrap">{executeTabLabel}</p>
+                          {singleExecuteMethodUid && (
+                            <button
+                              onClick={() => removeMethod(singleExecuteMethodUid)}
+                              className="btn btn-ghost btn-xs p-0 h-auto min-h-0 opacity-70 hover:opacity-100"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="divide-y divide-base-300 px-5">
+                        <ContractWriteMethods
+                          deployedContractData={{ address: initialContractData.address, abi }}
+                          onChange={triggerRefreshDisplayVariables}
+                          removeMethod={removeMethod}
+                          initialParamsByMethod={initialParamsByMethod}
+                        />
                       </div>
                     </div>
-                    <div className="divide-y divide-base-300 px-5">
-                      <ContractWriteMethods
-                        deployedContractData={{ address: initialContractData.address, abi }}
-                        onChange={triggerRefreshDisplayVariables}
-                        removeMethod={removeMethod}
-                        initialParamsByMethod={initialParamsByMethod}
-                      />
-                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               <div className="laptop:col-span-4 flex flex-col mt-10">
