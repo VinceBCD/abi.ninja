@@ -45,5 +45,11 @@ declare namespace Cypress {
      * @example cy.importABI('[ ... ]')
      */
     importABI(abi: string): Chainable<void>;
+
+    /**
+     * Custom command to select a preset contract from the preset dropdown.
+     * @example cy.selectPreset('EvidenZIssuers — Gnosis')
+     */
+    selectPreset(presetLabel: string): Chainable<void>;
   }
 }

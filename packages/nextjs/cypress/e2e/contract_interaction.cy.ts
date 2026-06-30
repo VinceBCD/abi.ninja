@@ -1,33 +1,32 @@
 describe("Contract Interaction", () => {
-  it("should load DAI contract on Ethereum and interact with its balanceOf method", () => {
+  it("should load EvidenZIssuers on Gnosis via preset selector", () => {
     cy.visit("http://localhost:3000");
-    cy.selectNetwork("Ethereum");
-    cy.loadContract("0x6B175474E89094C44Da98b954EedeAC495271d0F");
-    cy.url({ timeout: 20000 }).should("include", "/0x6B175474E89094C44Da98b954EedeAC495271d0F/1");
+    cy.selectPreset("EvidenZIssuers — Gnosis");
+    cy.get("button").contains("Load contract").should("not.be.disabled").click();
+    cy.url({ timeout: 20000 }).should("include", "/0x09016EF58B53510B40835e1F4938EE74bB167e05/100");
     cy.get(".loading-spinner", { timeout: 20000 }).should("not.exist");
-    cy.interactWithMethod("balanceOf", "0x6B175474E89094C44Da98b954EedeAC495271d0F");
   });
 
-  it("should load a contract on BNB Smart Chain and interact with its balanceOf method", () => {
+  it("should load EvidenZStorage on BSC via preset selector", () => {
     cy.visit("http://localhost:3000");
-    cy.selectNetwork("BNB Smart Chain");
-    cy.loadContract("0x2170ed0880ac9a755fd29b2688956bd959f933f8");
-    cy.url({ timeout: 20000 }).should("include", "/0x2170ed0880ac9a755fd29b2688956bd959f933f8/56");
+    cy.selectPreset("EvidenZStorage — BSC");
+    cy.get("button").contains("Load contract").should("not.be.disabled").click();
+    cy.url({ timeout: 20000 }).should("include", "/0x2E13439BACF550B0753699f6811405c0100C7F28/56");
     cy.get(".loading-spinner", { timeout: 20000 }).should("not.exist");
-    cy.interactWithMethod("balanceOf", "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045");
   });
 
-  it("should load EvidenZStorage on Gnosis and interact with a read method", () => {
+  it("should load EvidenZStorage on Gnosis via preset selector", () => {
     cy.visit("http://localhost:3000");
-    cy.loadContract("0x2e9e949f19d068b8f6be46136e496f7cdbf5f4ba");
+    cy.selectPreset("EvidenZStorage — Gnosis");
+    cy.get("button").contains("Load contract").should("not.be.disabled").click();
     cy.url({ timeout: 20000 }).should("include", "/0x2e9e949f19d068b8f6be46136e496f7cdbf5f4ba/100");
     cy.get(".loading-spinner", { timeout: 20000 }).should("not.exist");
   });
 
-  it("should load a contract on Avalanche and interact with its balanceOf method", () => {
+  it("should load EvidenZStorage on Avalanche via preset selector", () => {
     cy.visit("http://localhost:3000");
-    cy.selectNetwork("Avalanche");
-    cy.loadContract("0x5bC445bbB32f75B9b09B68413d2042D3b87bEf8A");
+    cy.selectPreset("EvidenZStorage — Avalanche");
+    cy.get("button").contains("Load contract").should("not.be.disabled").click();
     cy.url({ timeout: 20000 }).should("include", "/0x5bC445bbB32f75B9b09B68413d2042D3b87bEf8A/43114");
     cy.get(".loading-spinner", { timeout: 20000 }).should("not.exist");
   });

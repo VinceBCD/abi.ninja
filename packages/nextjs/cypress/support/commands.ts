@@ -21,6 +21,13 @@ Cypress.Commands.add("loadContract", (address: string) => {
   cy.wait(2000); // Wait for API call to initiate
 });
 
+Cypress.Commands.add("selectPreset", (presetLabel: string) => {
+  cy.get("#react-select-preset-select-input")
+    .click({ force: true })
+    .type(presetLabel, { force: true })
+    .type("{enter}", { force: true });
+});
+
 Cypress.Commands.add("selectNetwork", (networkName: string) => {
   cy.get("#react-select-container")
     .click()
