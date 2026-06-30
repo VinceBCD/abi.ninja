@@ -307,6 +307,7 @@ const Home: NextPage = () => {
                         className="text-sm"
                         theme={selectTheme}
                         styles={selectStyles}
+                        menuPortalTarget={typeof window !== "undefined" ? document.body : null}
                       />
                     </div>
                     {/* Divider */}
